@@ -24,17 +24,24 @@ import android.view.animation.LinearInterpolator;
 
 public class WeatherView extends View {
 
-    //share data
+    //[share data]
     private ValueAnimator mValueAnimator;
     private int mDropCount = 30;
     private float mDropSpeed = 30;
     private float mDropDirection = 90;//0-180
     private float mWindStrength = -1;//-1-0-+1
 
-    //rain data
-    private float mMinRainWidthStroke = 0.5f;
-    private float mMaxRainWidthStroke = 2;
+    //决定移动的距离，在onMeature中被决定
+    float mMoveDistanceX = 100;
+    float mMoveDistanceY = 100;
+    //[share data]
 
+    private WEATHER_TYPE mWeatherType = WEATHER_TYPE.RAIN;
+
+    //rain data
+    private final float mMinRainWidthStroke = 0.5f;
+    private final float mMaxRainWidthStroke = 2;
+    //rain data
 
     public WeatherView(Context context) {
         this(context, null);
@@ -49,14 +56,58 @@ public class WeatherView extends View {
         init();
     }
 
-    private WEATHER_TYPE mWeatherType = WEATHER_TYPE.RAIN;
+    public void setWeatherType(WEATHER_TYPE weatherType) {
+        this.mWeatherType = weatherType;
+        //create new seed
+        switch (mWeatherType) {
+            case RAIN:
+                break;
+            case SNOW:
+                break;
+            case HAIL:
+                break;
+            case CLOUD:
+                break;
+            default:
+                break;
+        }
+    }
 
     enum WEATHER_TYPE {
         RAIN, SNOW, HAIL/*冰雹*/, CLOUD
     }
 
-    float moveDistanceX;
-    float moveDistanceY;
+    public int getDropCount() {
+        return mDropCount;
+    }
+
+    public void setDropCount(int dropCount) {
+        this.mDropCount = dropCount;
+    }
+
+    public float getDropSpeed() {
+        return mDropSpeed;
+    }
+
+    public void setDropSpeed(float dropSpeed) {
+        this.mDropSpeed = dropSpeed;
+    }
+
+    public float getDropDirection() {
+        return mDropDirection;
+    }
+
+    public void setDropDirection(float dropDirection) {
+        this.mDropDirection = dropDirection;
+    }
+
+    public float getWindStrength() {
+        return mWindStrength;
+    }
+
+    public void setWindStrength(float windStrength) {
+        this.mWindStrength = windStrength;
+    }
 
     class RainSeed {
         float mStartX;
@@ -72,64 +123,52 @@ public class WeatherView extends View {
     }
 
     public void startDrop() {
-        switch (mWeatherType) {
-            case RAIN:
-                createAnimAndStart();
-                break;
-            case SNOW:
-                break;
-            case HAIL:
-                break;
-            case CLOUD:
-                break;
-            default:
-                break;
-        }
+        createAnimAndStart();
     }
 
     private void createAnimAndStart() {
-        if (mValueAnimator == null) {
-            mValueAnimator = ValueAnimator.ofFloat(0, 100);
-            mValueAnimator.setInterpolator(new LinearInterpolator());
-            mValueAnimator.setRepeatMode(ValueAnimator.INFINITE);
-            mValueAnimator.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationStart(Animator animation) {
-                    super.onAnimationStart(animation);
-                }
+        createRainAnim();
+    }
 
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    super.onAnimationEnd(animation);
-                }
+    private void createRainAnim() {
+        ValueAnimator anim = ValueAnimator.ofFloat(0, 1);
+        anim.setInterpolator(new LinearInterpolator());
+        anim.setRepeatCount(ValueAnimator.INFINITE);
+        anim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                super.onAnimationStart(animation);
+            }
 
-                @Override
-                public void onAnimationPause(Animator animation) {
-                    super.onAnimationPause(animation);
-                }
-            });
-            mValueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    invalidate();
-                }
-            });
-            mValueAnimator.start();
-        } else {
-            if (mValueAnimator.isPaused()) {
-                mValueAnimator.resume();
-                return;
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
             }
-            if (mValueAnimator.isStarted() || mValueAnimator.isRunning()) {
-                return;
-            } else {
-                mValueAnimator.start();
+
+            @Override
+            public void onAnimationPause(Animator animation) {
+                super.onAnimationPause(animation);
             }
-        }
+        });
+        anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float percent = (float) animation.getAnimatedValue();
+                invalidate();
+            }
+        });
+        anim.setDuration(250);
+        anim.start();
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        mMoveDistanceX = getMeasuredWidth();
+        mMoveDistanceY = getMeasuredHeight();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-
     }
 }
